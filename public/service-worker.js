@@ -38,5 +38,29 @@ self.addEventListener("activate",
       })
     );
 
-    self.clientInformation.claim();
+    self.clients.claim();
   });
+
+  //fetch
+  self.addEventListener("fetch", function(evt){
+    if(evt.request.url.includes("/api/")) {
+        evt.respondWith(
+            caches.open(DATA_CACHE_NAME).then(cache => {
+                return fetch(evt.request)
+                .then(response => {
+                    if(response.status === 200) {
+                        cache.put(evt.request.url, response.clone());
+                    }
+
+                    return response;
+                })
+                .catch(err => {
+                    return cache.match(evt.request);
+                });
+            }).catch(err => console.log(err))
+        );
+
+        return;
+    }
+
+  })
